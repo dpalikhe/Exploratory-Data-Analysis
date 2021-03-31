@@ -1,2 +1,2 @@
 # Spring2021
-Exploratory Data Analysis project for Statistical Mathematical Modeling class. 
+Dataset used: https://www.kaggle.com/marcospessotto/happiness-and-alcohol-consumption
