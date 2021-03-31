@@ -1,0 +1,124 @@
+---
+title: "Project 1"
+author: "Dikchhya Palikhe"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+HAC<- read.csv(file.choose() , stringsAsFactors = TRUE)
+attach(HAC)
+
+```
+
+
+### Introduction
+
+  Happiness and Alcohol Consumption dataset compares the Happiness Score and Alcohol Consumption Per Capita of different countries from both hemispheres and different regions. This dataset has 122 observations with 9 variables. 
+
+
+
+### Summary Statistics
+
+  The 5 number summary was found for each of the variables. Boxplots were also plotted to find the shape of the distribution for the variables with numeric values. Unique function was used to find the levels for the Region variable.  
+```{r}
+summary (HAC)
+unique(Region)
+```
+
+```{r, fig.align='center'}
+boxplot(HappinessScore, horizontal = TRUE, main ="Happiness Score")
+#Happiness Score is normally distributed.
+boxplot(HDI, horizontal = TRUE, main="HDI")
+#HDI is normally distributed. 
+boxplot(GDP_PerCapita, horizontal = TRUE, main="GDP Per Capita")
+# GDP is right-skewed with a lot of upper outliers. 
+boxplot(Beer_PerCapita,Spirit_PerCapita, Wine_PerCapita, horizontal = TRUE, names= c("Beer", "Spirit", "Wine"), main="Alcohol Per Capita by type of drink")
+#Beer and Spirit are normally distributed whereas Wine is right-skewed with few upper outliers. 
+
+```
+The variables from the dataset are:-
+
+1. Country: It includes the names of the countries which are also our observations. There are 122 unique countries in our data.
+
+2. Region: It includes region the country belongs to such as Western Europe, Latin America, Eastern Asia, etc. There are 9 unique regions.
+
+3. Hemisphere: Northern, Southern or both. 
+
+4. HappinessScore: It represents the metric measured in 2016 by asking the sampled people the question: "How would you rate your happiness on a scale of 0 to 10 where 10 is the happiest". It appears to have a normal distribution with no outliers. 
+
+5. HDI: Human Development Index by United Nations Development Programme. It is a normal distribution with one lower outlier. 
+
+6. GDP_PerCapita: Gross Domestic Product (Economic development). It is right-skewed with a lot of upper outliers. 
+
+7. Beer_PerCapita: Liters ( per capita ) of beer consumption they are in liters. It is a normal distribution. 
+
+8. Spirit_PerCapita: Consumption of spirits drink ( per capita ) in litres. It is a normal distribution with 2 upper outliers.
+
+9. Wine_PerCapita: Wine consumption (per capita) in litres. It is right skewed with a couple of upper outliers. 
+
+
+
+### Data Visualization 
+
+  In order to find the relation between the Happiness Score and the Alcohol Consumption, a new variable "Alcohol_PerCapita" was introduced which is the sum of beer, wine and spirit per capita and was plotted against the Happiness Score in a scatterplot. Alcohol Per Capita was taken as the independent x variable whereas the Happiness Score as the dependent y variable. 
+
+```{r, fig.align='center'}
+HAC2<-HAC %>% mutate(Alcohol_PerCapita = Beer_PerCapita+Wine_PerCapita+Spirit_PerCapita)
+ggplot(HAC2, aes(x=Alcohol_PerCapita, y=HappinessScore))+ geom_point()+ labs(title= "Alcohol Per Capita vs Happiness Score",x="Alcohol Per Capita", y="Happiness Score (0-10)")
+```
+
+  By looking at the graph, there appears to be a connection between Happiness Score and Alcohol Consumption. The scatterplot has a linear pattern, as x increases y also increases. However, there are some points that do not follow the pattern and have low Alcohol Per Capita with high Happiness Score ,and vice versa. 
+
+  In order to understand if there is a third variable affecting them, both of them were plotted against GDP Per Capita and HDI. The graphs are as below:-
+
+```{r, fig.align='center'}
+ggplot(HAC2, aes(x=GDP_PerCapita, y=HappinessScore)) +geom_point()+labs(title= "GDP Per Capita vs Happiness Score",x="GDP Per Capita", y="Happiness Score (0-10)")
+ggplot(HAC2, aes(x=HDI, y=HappinessScore)) +geom_point()+labs(title= "HDI vs Happiness Score",x="HDI", y="Happiness Score (0-10)")
+ggplot(HAC2, aes(x=GDP_PerCapita, y=Alcohol_PerCapita)) +geom_point()+labs(title= "GDP Per Capita vs Alcohol Per Capita",x="GDP Per Capita", y="Alcohol Per Capita")
+ggplot(HAC2, aes(x=HDI, y=Alcohol_PerCapita)) +geom_point()+labs(title= "HDI vs Alcohol Per Capita",x="HDI", y="Alcohol Per Capita")
+```
+
+  Both GDP Per Capita vs Happiness Score and GDP Per Capita vs Alcohol Per Capita do not have a linear pattern and thus do not indicate any relation between them. However, HDI vs Happiness Score and HDI vs Alcohol Per Capita show a linear pattern similar to the Alcohol vs Happiness graph. 
+
+  GDP Per Capita has a number of outliers and its graphs against Alcohol and Happiness tell us that there is no relationship between the variables. So, HDI was selected for further exploration and analysis. 
+
+  The dataset was filtered by northern and southern hemispheres and median HDI for each regions were calculated. The results were plotted in a bar graph with HDI lowest to highest. 
+
+```{r, fig.align='center'}
+HAC3<-HAC2 %>%
+filter( Hemisphere=="north") %>% group_by(Region) %>% summarize(MedianHDI = median(HDI))%>% arrange(MedianHDI)
+HAC3
+ggplot(HAC3, aes(x = reorder(Region, MedianHDI), y = MedianHDI))+ geom_col(fill = "gray", color=" black")+ labs(title=" MedianHDI of Each Region in the Northern Hemisphere from Lowest to Highest" , x= "Region")+ coord_flip()
+```
+
+```{r, fig.align='center'}
+HAC4<-HAC2 %>%
+filter( Hemisphere=="south") %>% group_by(Region) %>% summarize(MedianHDI = median(HDI))%>% arrange(MedianHDI)
+HAC4
+ggplot(HAC4, aes(x = reorder(Region, MedianHDI), y = MedianHDI))+ geom_col(fill = "gray", color=" black")+ labs(title=" MedianHDI of Each Region in the Southern Hemisphere from lowest to highest" , x= "Region")
+```
+
+  Northern America had the highest median HDI from the North Hemisphere whereas the Oceania regions had the highest from the Southern Hemispheres. Similarly, Sub-Saharan Africa had the lowest median HDI in both hemispheres. 
+
+  To understand HDI further, HDI vs Alcohol Per Capita subplots were plotted based on region. 
+
+```{r, fig.align='center'}
+ggplot(HAC2, aes(x=HDI, y=Alcohol_PerCapita, color= Region))+geom_point()+facet_wrap(~Region) + labs(title="HDI vs Alcohol Per Capita by Region")
+```
+
+  From this graph, most countries of Europe, North America and Oceania seem to have high HDI and high alcohol consumption whereas countries from Sub-Saharan Africa have low HDI and alcohol consumption. This coincide with our observations from the bar graphs. 
+
+  However, looking at the subplots of Asia, Middle East and Northern Africa, majority of these countries have high HDI and low alcohol consumption.This contradicts with the prediction that countries with high HDI/Happiness Score will have high alcohol consumption. Alcohol consumption might not depend solely on HDI of the countries. Majority of the countries in the Middle East and Northern Africa are Islamic countries where alcohol is forbidden by their culture. So it would not be possible to say that all of these countries with low alcohol per capita have low Happiness Score. 
+
+
+
+### Conclusion
+
+  Analyzing the different graphs and plots, there does not seem to be a relationship between Happiness Score and Alcohol Consumption. Happiness Score is affected by a number of different factors so it is not possible to make a prediction of the country's score based on their alcohol per capita. However, the data does indicate a linear relationship between Happiness Score and HDI. HDI is based on life expectancy, education level and standard of living. So, it makes sense for them to have a linear relationship. 
